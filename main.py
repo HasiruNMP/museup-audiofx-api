@@ -28,7 +28,8 @@ def upload():
         ts = calendar.timegm(gmt)
         file_name = user_id + str(ts) + '.mp4'
 
-        file.save("storage/" + file_name)
+        file.save("static/videos/" + file_name)
+        url = url_for('static', filename="videos/" + file_name)
 
         #clip = mp.VideoFileClip(r"audioFX/video.mp4")
         #clip.audio.write_audiofile(r"audioFX/audio.wav")
@@ -37,6 +38,7 @@ def upload():
 
         return jsonify({
             "filename": str(file_name),
+            "url": str(url),
         })
 
 
