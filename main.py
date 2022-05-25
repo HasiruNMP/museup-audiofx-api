@@ -85,4 +85,4 @@ def upload_to_fb_storage(file_name):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=4000)
+    app.run(debug=True, port=3500)
