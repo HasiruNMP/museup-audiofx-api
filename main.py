@@ -20,21 +20,22 @@ db = firestore.client()
 @app.route('/process', methods=["POST"])
 def upload():
     if request.method == "POST":
-
         file = request.files['video']
         user_id = request.args.get('userID')
 
         gmt = time.gmtime()
         ts = calendar.timegm(gmt)
-        file_name = user_id + str(ts) + '.mp4'
+        file_name = user_id + str(ts)
+        file_name_ex = file_name + '.mp4'
 
-        file.save("static/videos/" + file_name)
-        url = url_for('static', filename="videos/" + file_name)
+        file.save("static/videos/" + file_name_ex)
+        url = url_for('static', filename="videos/" + file_name_ex)
 
-        #clip = mp.VideoFileClip(r"audioFX/video.mp4")
-        #clip.audio.write_audiofile(r"audioFX/audio.wav")
+        file.save("storage/" + file_name_ex)
+        clip = mp.VideoFileClip(r"storage/" + file_name_ex)
+        clip.audio.write_audiofile(r"storage/" + file_name + ".wav")
 
-        #add_fx("audioFX/audio.wav")
+        add_fx("storage/" + file_name + ".wav", file_name)
 
         return jsonify({
             "filename": str(file_name),
@@ -42,8 +43,8 @@ def upload():
         })
 
 
-def add_fx(filename):
-    with AudioFile(filename, 'r') as f:
+def add_fx(file_path, file_name):
+    with AudioFile(file_path, 'r') as f:
         audio = f.read(f.frames)
         samplerate = f.samplerate
 
@@ -54,19 +55,19 @@ def add_fx(filename):
         Limiter(threshold_db=-0.1),
     ])
     effected = board(audio, samplerate)
-    with AudioFile('storage/processed-output.wav', 'w', samplerate, effected.shape[0]) as f:
+    with AudioFile("storage/" + file_name + "afx.wav", 'w', samplerate, effected.shape[0]) as f:
         f.write(effected)
 
-    videoclip = VideoFileClip("storage/video.mp4")
+    videoclip = VideoFileClip("storage/" + file_name + ".mp4")
     new_clip = videoclip.without_audio()
-    new_clip.write_videofile("storage/videowithoutaudio.mp4")
+    new_clip.write_videofile("storage/" + file_name + "no-audio.mp4")
 
-    audioclip = AudioFileClip('storage/processed-output.wav')
+    audioclip = AudioFileClip("storage/" + file_name + "afx.wav")
 
     new_audioclip = CompositeAudioClip([audioclip])
     new_clip.audio = new_audioclip
-    new_clip.write_videofile("storage/final-video.mp4")
-    upload_to_fb_storage("storage/final-video.mp4")
+    new_clip.write_videofile("storage/" + file_name + "final.mp4")
+    upload_to_fb_storage("storage/" + file_name + "final.mp4")
 
 
 def upload_to_fb_storage(file_name):
