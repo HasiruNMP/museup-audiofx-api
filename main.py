@@ -25,25 +25,22 @@ def upload():
 
         gmt = time.gmtime()
         ts = calendar.timegm(gmt)
-        file_name = user_id + str(ts)
-        file_name_ex = file_name + '.mp4'
-
-        file.save("static/videos/" + file_name_ex)
-        url = url_for('static', filename="videos/" + file_name_ex)
-
+        file_name = secure_filename(user_id + str(ts))
+        file_name_ex = secure_filename(file_name + ".mp4")
         file.save("storage/" + file_name_ex)
+
         clip = mp.VideoFileClip(r"storage/" + file_name_ex)
         clip.audio.write_audiofile(r"storage/" + file_name + ".wav")
 
-        add_fx("storage/" + file_name + ".wav", file_name)
+        add_fx("storage/" + file_name + ".wav", file_name, user_id)
 
         return jsonify({
-            "filename": str(file_name),
-            "url": str(url),
+            "filename": str(file_name_ex),
+            "url": str(),
         })
 
 
-def add_fx(file_path, file_name):
+def add_fx(file_path, file_name, user_id):
     with AudioFile(file_path, 'r') as f:
         audio = f.read(f.frames)
         samplerate = f.samplerate
@@ -67,10 +64,10 @@ def add_fx(file_path, file_name):
     new_audioclip = CompositeAudioClip([audioclip])
     new_clip.audio = new_audioclip
     new_clip.write_videofile("storage/" + file_name + "final.mp4")
-    upload_to_fb_storage("storage/" + file_name + "final.mp4")
+    upload_to_fb_storage("storage/" + file_name + "final.mp4", user_id)
 
 
-def upload_to_fb_storage(file_name):
+def upload_to_fb_storage(file_name, user_id):
     bucket = storage.bucket()
     blob = bucket.blob(file_name)
     blob.upload_from_filename(file_name)
@@ -78,7 +75,7 @@ def upload_to_fb_storage(file_name):
     url = blob.public_url
 
     db.collection('media').add({
-        "userID": "123",
+        "userID": user_id,
         "url": url,
         "type": "video",
     })
