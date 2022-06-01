@@ -17,7 +17,8 @@ initialize_app(cred, {'storageBucket': 'hnmp-museup.appspot.com'})
 db = firestore.client()
 
 
-@app.route('/process', methods=["POST"])
+# API Endpoint for uploading videos to add audio effects
+@app.route('/upload/video-with-fx', methods=["POST"])
 def upload():
     if request.method == "POST":
         file = request.files['video']
@@ -40,6 +41,7 @@ def upload():
         })
 
 
+# this function adds effects to the audio file -compression, delay, reverb, limiter
 def add_fx(file_path, file_name, user_id):
     with AudioFile(file_path, 'r') as f:
         audio = f.read(f.frames)
@@ -47,8 +49,8 @@ def add_fx(file_path, file_name, user_id):
 
     board = Pedalboard([
         Compressor(threshold_db=-40, ratio=1.2),
-        Delay(delay_seconds=0.2, mix=0.3, feedback=0.4),
-        Reverb(room_size=0.1, wet_level=0.2, damping=0.2),
+        Delay(delay_seconds=0.2, mix=0.3, feedback=0.3),
+        Reverb(room_size=0.1, wet_level=0.3, damping=0.2),
         Limiter(threshold_db=-0.1),
     ])
     effected = board(audio, samplerate)
@@ -67,6 +69,7 @@ def add_fx(file_path, file_name, user_id):
     upload_to_fb_storage("storage/" + file_name + "final.mp4", user_id)
 
 
+# upload new video to firebase storage
 def upload_to_fb_storage(file_name, user_id):
     bucket = storage.bucket()
     blob = bucket.blob(file_name)
@@ -78,6 +81,7 @@ def upload_to_fb_storage(file_name, user_id):
         "userID": user_id,
         "url": url,
         "type": "video",
+        "time": firestore.SERVER_TIMESTAMP,
     })
 
 
