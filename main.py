@@ -48,10 +48,10 @@ def add_fx(file_path, file_name, user_id):
         samplerate = f.samplerate
 
     board = Pedalboard([
-        Compressor(threshold_db=-40, ratio=1.2),
-        Delay(delay_seconds=0.2, mix=0.3, feedback=0.3),
-        Reverb(room_size=0.1, wet_level=0.3, damping=0.2),
-        Limiter(threshold_db=-0.1),
+        #Compressor(threshold_db=-30, ratio=1.1),
+        Delay(delay_seconds=0.5, mix=0.1, feedback=0.05),
+        Reverb(room_size=0.1, wet_level=0.1, damping=0.9),
+        #Limiter(threshold_db=-0.1),
     ])
     effected = board(audio, samplerate)
     with AudioFile("storage/" + file_name + "afx.wav", 'w', samplerate, effected.shape[0]) as f:
@@ -66,7 +66,7 @@ def add_fx(file_path, file_name, user_id):
     new_audioclip = CompositeAudioClip([audioclip])
     new_clip.audio = new_audioclip
     new_clip.write_videofile("storage/" + file_name + "final.mp4")
-    upload_to_fb_storage("storage/" + file_name + "final.mp4", user_id)
+    #upload_to_fb_storage("storage/" + file_name + "final.mp4", user_id)
 
 
 # upload new video to firebase storage
